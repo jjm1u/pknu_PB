@@ -116,15 +116,6 @@ class Player:
         x, y = Tile.coords[self.tile_num]
         self.screen.blit(self.image, (x, y))
 
-    def random_move(self):
-        directions = ['UP', 'DOWN', 'LEFT', 'RIGHT']
-        rd.shuffle(directions)
-        for direction in directions:
-            next_tile_num = self.cal_next_tile_num(direction)
-            if Tile.obj[next_tile_num].tile_type == 'road':
-                self.tile_num = next_tile_num
-                break
-
 # Pygame 초기화
 pygame.init()
 
@@ -155,12 +146,31 @@ map_index = 0
 Tile.update_map_objects(map_index)  # 초기 obj 설정
 player = Player(61, player_image, screen)
 
+# 목표 타일: 가장 오른쪽, 가장 밑에 있는 길에 도달하면 게임 끝
+def get_target_tile():
+    for i in range(len(Tile.obj) - 1, -1, -1):  # 뒤에서부터 찾기
+        if Tile.obj[i].tile_type == 'road':
+            return i
+    return None
+
+target_tile = get_target_tile()
+
+# 시간 측정을 위한 초기화
+start_time = t.time()
+font = pygame.font.Font(None, 36)  # 화면에 표시할 글꼴 설정
+
 running = True
 
 # 게임 루프
 while running:
+    elapsed_time = int(t.time() - start_time)  # 경과 시간 계산
     screen.blit(map_images[map_index], (0, 0))  # 맵을 매 프레임마다 다시 그리기
     player.show_player()  # 플레이어 그리기
+
+    # 경과 시간 표시 (빨간색 글씨)
+    time_surface = font.render(f"Time: {elapsed_time} sec", True, (255, 0, 0))
+    screen.blit(time_surface, (10, 10))
+
     pygame.display.flip()  # 화면 업데이트
 
     for event in pygame.event.get():
@@ -186,9 +196,12 @@ while running:
 
         if event.type == pygame.USEREVENT:
             map_index = (map_index + 1) % len(map_images)
-            Tile.update_map_objects(map_index)  # 새 맵 데이터 반영
-            if Tile.obj[player.tile_num].tile_type == 'wall':
-                player.random_move()  # 플레이어가 벽에 있으면 랜덤 이동
+            Tile.update_map_objects(map_index)
+
+    # 게임 완료 조건 (가장 오른쪽, 가장 밑에 있는 길에 도달)
+    if player.tile_num == target_tile:
+        running = False
+        print(f"게임 완료! 총 시간: {elapsed_time} 초")
 
     clock.tick(60)
 
