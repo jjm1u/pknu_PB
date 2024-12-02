@@ -3,17 +3,10 @@ import random as rd
 import time as t
 import numpy as np
 
-'''
-pygame으로 만든 창은 좌표가 왼쪽 위에서부터 시작함 (0, 0)
-오른쪽과 아래쪽으로 갈수록 x, y 좌표가 각각 증가함
-'''
-
-# 사용자 정의 예외 클래스
 class OutsideBoundaryError(Exception):
     """외벽에서 이동하려고 할 경우 발생하는 사용자 정의 예외"""
     def __init__(self, message):
         super().__init__(message)
-
 
 class Tile:
     coords = [(x*15, y*15) for y in range(0, 40) for x in range(0, 60)]
@@ -69,13 +62,22 @@ class Tile:
             combined_surf.blit(image, cls.coords[i])
         pygame.image.save(combined_surf, f'MAZE_MAP{map_num + 1}.png')
 
+    @classmethod
+    def update_map_objects(cls, map_num):
+        """맵 변경 시 obj 리스트를 새로 갱신"""
+        now_map = cls.map_data[map_num]
+        cls.obj = []  # 기존 obj 초기화
+        for tile_type in now_map:
+            if tile_type == 0:
+                cls.obj.append(cls('wall'))
+            else:
+                cls.obj.append(cls('road'))
 
 class Player:
     def __init__(self, tile_num, player_image, screen):
         self.tile_num = tile_num
         self.image = player_image
         self.screen = screen
-        self.show_player(tile_num)
 
     def cal_next_tile_num(self, user_key):
         if user_key == 'UP':
@@ -105,14 +107,23 @@ class Player:
         self.check_boundary(next_tile_num, user_key)
         if Tile.obj[next_tile_num].tile_type == 'road':
             self.tile_num = next_tile_num
-            self.show_player(self.tile_num)
+            return True
         else:
             print("벽이 있어 이동할 수 없습니다.")
+            return False
 
-    def show_player(self, tile_num):
-        x, y = Tile.coords[tile_num]
+    def show_player(self):
+        x, y = Tile.coords[self.tile_num]
         self.screen.blit(self.image, (x, y))
 
+    def random_move(self):
+        directions = ['UP', 'DOWN', 'LEFT', 'RIGHT']
+        rd.shuffle(directions)
+        for direction in directions:
+            next_tile_num = self.cal_next_tile_num(direction)
+            if Tile.obj[next_tile_num].tile_type == 'road':
+                self.tile_num = next_tile_num
+                break
 
 # Pygame 초기화
 pygame.init()
@@ -140,15 +151,18 @@ pygame.display.set_caption("Maze_Game")
 
 pygame.time.set_timer(pygame.USEREVENT, 15000)
 clock = pygame.time.Clock()
-screen.blit(map_images[0], (0, 0))
-
-map_index = 1
+map_index = 0
+Tile.update_map_objects(map_index)  # 초기 obj 설정
 player = Player(61, player_image, screen)
 
 running = True
 
 # 게임 루프
 while running:
+    screen.blit(map_images[map_index], (0, 0))  # 맵을 매 프레임마다 다시 그리기
+    player.show_player()  # 플레이어 그리기
+    pygame.display.flip()  # 화면 업데이트
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -171,13 +185,11 @@ while running:
                 print(f"오류 발생: {e}")
 
         if event.type == pygame.USEREVENT:
-            if map_index == len(map_images):
-                map_index = 0
-            screen.blit(map_images[map_index], (0, 0))
-            map_index += 1
-            player.show_player(61)
+            map_index = (map_index + 1) % len(map_images)
+            Tile.update_map_objects(map_index)  # 새 맵 데이터 반영
+            if Tile.obj[player.tile_num].tile_type == 'wall':
+                player.random_move()  # 플레이어가 벽에 있으면 랜덤 이동
 
-    pygame.display.flip()
     clock.tick(60)
 
 pygame.quit()
