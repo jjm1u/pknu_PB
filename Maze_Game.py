@@ -18,7 +18,7 @@ class Maze:   #미로 게임 한 번의 데이터들을 저장할 객체, Tile �
         self.mapsize = height * width
         self.map_data = [self.generate_maze() for _ in range(3)]
         self.coords = [(x, y) for y in range(0, self.height * 15 , 15) for x in range(0, self.width * 15, 15)]
-        self.exit_tile_num = self.mapsize - self.width - 1  #탈출구의 위치는 오른쪽 아래에 일정하게 생성됨
+        self.exit_tile_nums = [self.mapsize - self.width - i for i in range(1, 4)]  #탈출구의 위치는 오른쪽 아래 가로 세 칸으로 일정하게 생성됨
 
     def set_edge_tile_num(self):
         self.left_vertical_edge_num = [i for i in range(0, self.mapsize - self.width, self.width)]
@@ -94,6 +94,9 @@ class Player:
     @staticmethod
     def check_boundary(next_tile_num):
         message = ""
+        if next_tile_num in maze.exit_tile_nums:
+            return
+        
         if next_tile_num in maze.up_horizon_edge_num:   #각 모서리는 일정 방향키를 눌러야만 갈 수 있기 때문에, 불필요한 입력 키 확인문을 제거함
 #ex): 위쪽 모서리는 UP key로만 갈 수 있음, 따라서 UP 키인지 확인은 불필요. next_tile_num 이 해당 모서리에 속하는지만 확인하면 됨
             message = "위쪽 외벽에서 위로 이동할 수 없습니다."
@@ -127,7 +130,7 @@ class Player:
 
     def is_moving_too_fast(self):
         second_move = t.time()
-        if second_move - self.first_move < 0.15:    #만약 이전 플레이어가 이동한 시간에서, 0,15초(추후 가장 적절한 값이 있다면 변형) 이상 지나지 않았다면, 너무 빠른 입력임(True)를 리턴해서 키 입력을 무시
+        if second_move - self.first_move < 0.1:    #만약 이전 플레이어가 이동한 시간에서, 0,15초(추후 가장 적절한 값이 있다면 변형) 이상 지나지 않았다면, 너무 빠른 입력임(True)를 리턴해서 키 입력을 무시
             return True
         else:
             self.first_move = second_move         #0.15초 이상 지났다면,  self.first_move 을 새로 갱신해주고
@@ -215,7 +218,7 @@ while running:
             maze.update_now_map_data(map_num)
 
     # 게임 완료 조건 (가장 오른쪽, 가장 밑에 있는 길에 도달)
-    if player.tile_num == maze.exit_tile_num:
+    if player.tile_num == maze.exit_tile_nums[0]:
         running = False
         print(f"게임 완료! 총 시간: {elapsed_time} 초")
 
