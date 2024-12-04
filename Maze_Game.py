@@ -213,8 +213,9 @@ while running:
             maze.update_now_map_data(map_num)
 
     if player.tile_num == maze.exit_tile_nums[0]:
-        running = False
+        pygame.mixer.Sound('sound_clear.mp3').play()
         print(f"게임 완료! 총 시간: {elapsed_time} 초")
+        running = False
 
     clock.tick(60)
 pygame.quit()
