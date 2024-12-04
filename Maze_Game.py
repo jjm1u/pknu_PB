@@ -66,6 +66,26 @@ class Maze:
     def update_now_map_data(self, map_num):
         self.now_map_data = self.map_data[map_num]
 
+class Screen:
+    def show_ending_screen(screen, elapsed_time):
+        ending_font = pygame.font.Font(None, 72)
+        message_font = pygame.font.Font(None, 36)
+
+        screen.fill((0, 0, 0))  # 배경을 검은색으로 설정
+        ending_message = ending_font.render("GAME CLEAR!", True, (255, 255, 0))
+        time_message = message_font.render(f"total time: {elapsed_time} sec", True, (255, 255, 255))
+
+        screen.blit(ending_message, (screen.get_width() // 2 - ending_message.get_width() // 2, 
+                                    screen.get_height() // 2 - ending_message.get_height() // 2 - 20))
+        screen.blit(time_message, (screen.get_width() // 2 - time_message.get_width() // 2, 
+                                    screen.get_height() // 2 + time_message.get_height() // 2))
+
+        pygame.display.flip()
+        pygame.mixer.Sound('sound_clear.mp3').play(-1)
+
+        # 엔딩 화면을 잠시 보여줌
+        t.sleep(10)  # 3초간 보여주기
+        pygame.quit()
 
 class Player:
     def __init__(self, tile_num, player_image, screen):
@@ -213,8 +233,7 @@ while running:
             maze.update_now_map_data(map_num)
 
     if player.tile_num == maze.exit_tile_nums[0]:
-        pygame.mixer.Sound('sound_clear.mp3').play()
-        print(f"게임 완료! 총 시간: {elapsed_time} 초")
+        Screen.show_ending_screen(screen, elapsed_time)
         running = False
 
     clock.tick(60)
