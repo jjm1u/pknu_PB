@@ -250,7 +250,7 @@ class ScreenManager:
         screen.blit(restart_message, (screen.get_width() // 2 - restart_message.get_width() // 2, 
                                        screen.get_height() // 2 + time_message.get_height() + 20))
 
-        pygame.mixer.Sound('sound_clear.mp3').play(-1)
+        pygame.mixer.Sound('sound_clear.mp3').play()
         pygame.display.flip()
 
         waiting_for_input = True
@@ -262,7 +262,7 @@ class ScreenManager:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_m:
                         waiting_for_input = False  # 게임을 다시 시작하기 위한 플래그
-        pygame.quit()  # 이전 게임 종료
+          # 이전 게임 종료
 
 
 def restart_game():
@@ -353,8 +353,8 @@ def restart_game():
                 maze.update_now_map_data(map_num)
 
         if player.tile_num == maze.exit_tile_nums[0]:
-            Screen.show_ending_screen(screen, elapsed_time)
-            running = False
+            ScreenManager.show_ending_screen(screen, elapsed_time)
+            restart_game()
 
         clock.tick(60)
 
