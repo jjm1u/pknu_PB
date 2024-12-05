@@ -66,7 +66,9 @@ class Maze:
     def update_now_map_data(self, map_num):
         self.now_map_data = self.map_data[map_num]
 
+
 class Screen:
+    @staticmethod
     def show_ending_screen(screen, elapsed_time):
         ending_font = pygame.font.Font(None, 72)
         message_font = pygame.font.Font(None, 36)
@@ -75,16 +77,16 @@ class Screen:
         ending_message = ending_font.render("GAME CLEAR!", True, (255, 255, 0))
         time_message = message_font.render(f"total time: {elapsed_time} sec", True, (255, 255, 255))
         restart_message = message_font.render("Press 'm' to play again", True, (255, 255, 255))
+
         screen.blit(ending_message, (screen.get_width() // 2 - ending_message.get_width() // 2, 
                                       screen.get_height() // 2 - ending_message.get_height() // 2 - 20))
         screen.blit(time_message, (screen.get_width() // 2 - time_message.get_width() // 2, 
                                     screen.get_height() // 2 + time_message.get_height() // 2))
         screen.blit(restart_message, (screen.get_width() // 2 - restart_message.get_width() // 2, 
                                        screen.get_height() // 2 + time_message.get_height() + 20))
-                                    
+
         pygame.mixer.Sound('sound_clear.mp3').play(-1)
         pygame.display.flip()
-        
 
         waiting_for_input = True
         while waiting_for_input:
@@ -97,6 +99,7 @@ class Screen:
                         waiting_for_input = False  # 게임을 다시 시작하기 위한 플래그
 
         pygame.quit()  # 이전 게임 종료
+
 
 class Player:
     def __init__(self, tile_num, player_image, screen):
@@ -160,92 +163,97 @@ class Player:
             return False
 
 
-# Pygame 초기화
-pygame.init()
-pygame.mixer.init()
+def restart_game():
+    # Pygame 초기화
+    pygame.init()
+    pygame.mixer.init()
 
-# 배경음악과 효과음 설정
-pygame.mixer.music.load('bgm.mp3')
-pygame.mixer.music.play(-1)  # 반복 재생
-pygame.mixer.music.set_volume(0.5)
+    # 배경음악과 효과음 설정
+    pygame.mixer.music.load('bgm.mp3')
+    pygame.mixer.music.play(-1)  # 반복 재생
+    pygame.mixer.music.set_volume(0.5)
 
-# 이미지 로드 및 크기 조정
-wall_image = pygame.image.load('stone_wall02.png')
-wall_image = pygame.transform.scale(wall_image, (15, 15))
-road_image = pygame.image.load('01tizeta_floor_e.png')
-road_image = pygame.transform.scale(road_image, (15, 15))
-player_image = pygame.image.load('Player.png')
-player_image = pygame.transform.scale(player_image, (15, 15))
+    # 이미지 로드 및 크기 조정
+    global wall_image, road_image, player_image, maze
+    wall_image = pygame.image.load('stone_wall02.png')
+    wall_image = pygame.transform.scale(wall_image, (15, 15))
+    road_image = pygame.image.load('01tizeta_floor_e.png')
+    road_image = pygame.transform.scale(road_image, (15, 15))
+    player_image = pygame.image.load('Player.png')
+    player_image = pygame.transform.scale(player_image, (15, 15))
 
-# 게임 설정
-print('플레이할 미로 크기를 설정하세요. 전체 타일 개수는 3500개 미만을 추천합니다.')
-x = int(input('미로의 가로 타일 개수 : '))
-y = int(input('미로의 세로 타일 개수 : '))
-maze = Maze(x, y)
-maze.set_edge_tile_num()
-for i in range(3):
-    combined_map = pygame.Surface((15 * maze.width, 15 * maze.height))
-    maze.make_map_picture(i, combined_map)
+    # 게임 설정
+    print('플레이할 미로 크기를 설정하세요. 전체 타일 개수는 3500개 미만을 추천합니다.')
+    x = int(input('미로의 가로 타일 개수 : '))
+    y = int(input('미로의 세로 타일 개수 : '))
+    maze = Maze(x, y)
+    maze.set_edge_tile_num()
+    for i in range(3):
+        combined_map = pygame.Surface((15 * maze.width, 15 * maze.height))
+        maze.make_map_picture(i, combined_map)
 
-maze_map1 = pygame.image.load('MAZE_MAP1.png')
-maze_map2 = pygame.image.load('MAZE_MAP2.png')
-maze_map3 = pygame.image.load('MAZE_MAP3.png')
-map_images = [maze_map1, maze_map2, maze_map3]
+    maze_map1 = pygame.image.load('MAZE_MAP1.png')
+    maze_map2 = pygame.image.load('MAZE_MAP2.png')
+    maze_map3 = pygame.image.load('MAZE_MAP3.png')
+    map_images = [maze_map1, maze_map2, maze_map3]
 
-screen = pygame.display.set_mode((15 * maze.width, 15 * maze.height))
-pygame.display.set_caption("Maze_Game")
+    screen = pygame.display.set_mode((15 * maze.width, 15 * maze.height))
+    pygame.display.set_caption("Maze_Game")
 
-pygame.time.set_timer(pygame.USEREVENT, 5000)
-clock = pygame.time.Clock()
-map_num = 0
-maze.update_now_map_data(map_num)
-player = Player(maze.width + 1, player_image, screen)
+    pygame.time.set_timer(pygame.USEREVENT, 5000)
+    clock = pygame.time.Clock()
+    map_num = 0
+    maze.update_now_map_data(map_num)
+    player = Player(maze.width + 1, player_image, screen)
 
-start_time = t.time()
-font = pygame.font.Font(None, 36)
+    start_time = t.time()
+    font = pygame.font.Font(None, 36)
 
-running = True
+    running = True
 
-# 게임 루프
-while running:
-    elapsed_time = int(t.time() - start_time)
-    screen.blit(map_images[map_num], (0, 0))
-    player.show_player()
+    # 게임 루프
+    while running:
+        elapsed_time = int(t.time() - start_time)
+        screen.blit(map_images[map_num], (0, 0))
+        player.show_player()
 
-    time_surface = font.render(f"Time: {elapsed_time} sec", True, (255, 0, 0))
-    screen.blit(time_surface, (10, 10))
+        time_surface = font.render(f"Time: {elapsed_time} sec", True, (255, 0, 0))
+        screen.blit(time_surface, (10, 10))
 
-    pygame.display.flip()
+        pygame.display.flip()
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if player.is_moving_too_fast():
+                    continue
+                if event.key == pygame.K_UP:
+                    key = "UP"
+                elif event.key == pygame.K_DOWN:
+                    key = "DOWN"
+                elif event.key == pygame.K_LEFT:
+                    key = "LEFT"
+                elif event.key == pygame.K_RIGHT:
+                    key = "RIGHT"
+                else:
+                    continue
+
+                try:
+                    player.move_player(key)
+                except OutsideBoundaryError as e:
+                    print(f"오류 발생: {e}")
+
+            if event.type == pygame.USEREVENT:
+                map_num = (map_num + 1) % len(map_images)
+                maze.update_now_map_data(map_num)
+
+        if player.tile_num == maze.exit_tile_nums[0]:
+            Screen.show_ending_screen(screen, elapsed_time)
             running = False
-        elif event.type == pygame.KEYDOWN:
-            if player.is_moving_too_fast():
-                continue
-            if event.key == pygame.K_UP:
-                key = "UP"
-            elif event.key == pygame.K_DOWN:
-                key = "DOWN"
-            elif event.key == pygame.K_LEFT:
-                key = "LEFT"
-            elif event.key == pygame.K_RIGHT:
-                key = "RIGHT"
-            else:
-                continue
 
-            try:
-                player.move_player(key)
-            except OutsideBoundaryError as e:
-                print(f"오류 발생: {e}")
+        clock.tick(60)
 
-        if event.type == pygame.USEREVENT:
-            map_num = (map_num + 1) % len(map_images)
-            maze.update_now_map_data(map_num)
-
-    if player.tile_num == maze.exit_tile_nums[0]:
-        Screen.show_ending_screen(screen, elapsed_time)
-        running = False
-
-    clock.tick(60)
-pygame.quit()
+# 메인 게임 루프
+while True:
+    restart_game()
