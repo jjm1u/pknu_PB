@@ -154,6 +154,10 @@ class Player:
 class ScreenManager:
 
     @staticmethod
+    def blit_image_center(screen, image, y):
+        screen.blit(image, (screen.get_width() // 2 - image.get_width() // 2, int(y)))
+
+    @staticmethod
     def show_starting_screen(screen):
         screen.fill((102, 153, 204))
         font_ = pygame.font.Font(None, 36)
@@ -199,8 +203,8 @@ class ScreenManager:
                     else:
                         continue
 
-                    
-    def input_maze_size(self, screen, font):
+    @classmethod
+    def input_maze_size(cls, screen, font):
             message_type = ['horizontal', 'vertical']
             width_height = []
             for i in range(2):
@@ -208,19 +212,16 @@ class ScreenManager:
                 input_message = font.render(f"""Type {message_type[i]} tile amount of maze you'll play!""", True, (102, 255, 255))
                 warning_message = pygame.font.Font(None, 23).render("the size must be two-digit", True, (102, 255, 255))
                 screen.fill((102, 153, 204))
-                screen.blit( input_message,
-                     (screen.get_width() // 2 - input_message.get_width() // 2, 560))
-                screen.blit( warning_message,
-                             (screen.get_width() // 2 - warning_message.get_width() // 2, 580))
+                cls.blit_image_center(screen, input_message, 560)
+                cls.blit_image_center(screen, warning_message, 580)
                 pygame.display.flip()
                 
                 for j in range(2):
-                    user_input = self.perceive_input_key()
+                    user_input = cls.perceive_input_key()
                     size[j] = user_input
                     font_ = pygame.font.Font(None, 20)
                     typed_value = font_.render(f"{''.join(size)}", True, (102, 255, 255))
-                    screen.blit(typed_value,
-                                screen.get_width() // 2 - typed_value.get_width() // 2, 620)
+                    cls.blit_image_center(screen, typed_value, 620)
                     pygame.display.flip()
                 width_height.append(int(''.join(size)))
             return width_height
@@ -228,7 +229,7 @@ class ScreenManager:
     def show_set_mapsize_screen(self, screen):
         screen.fill((102, 153, 204))
         font_ = pygame.font.Font(None, 36)
-        self.input_maze_size(screen, font_)
+        return map(int, self.input_maze_size(screen, font_))
 
         
 
@@ -287,8 +288,9 @@ def restart_game():
     screen = pygame.display.set_mode((900, 700))
     screen_manager = ScreenManager()
     screen_manager.show_starting_screen(screen)
-    screen_manager.show_set_mapsize_screen(screen)
-    
+    x, y = screen_manager.show_set_mapsize_screen(screen)
+
+    maze = Maze(x, y)    
     maze.set_edge_tile_num()
     for i in range(3):
         combined_map = pygame.Surface((15 * maze.width, 15 * maze.height))
