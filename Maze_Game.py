@@ -74,18 +74,29 @@ class Screen:
         screen.fill((0, 0, 0))  # 배경을 검은색으로 설정
         ending_message = ending_font.render("GAME CLEAR!", True, (255, 255, 0))
         time_message = message_font.render(f"total time: {elapsed_time} sec", True, (255, 255, 255))
-
+        restart_message = message_font.render("Press 'm' to play again", True, (255, 255, 255))
         screen.blit(ending_message, (screen.get_width() // 2 - ending_message.get_width() // 2, 
-                                    screen.get_height() // 2 - ending_message.get_height() // 2 - 20))
+                                      screen.get_height() // 2 - ending_message.get_height() // 2 - 20))
         screen.blit(time_message, (screen.get_width() // 2 - time_message.get_width() // 2, 
                                     screen.get_height() // 2 + time_message.get_height() // 2))
-
-        pygame.display.flip()
+        screen.blit(restart_message, (screen.get_width() // 2 - restart_message.get_width() // 2, 
+                                       screen.get_height() // 2 + time_message.get_height() + 20))
+                                    
         pygame.mixer.Sound('sound_clear.mp3').play(-1)
+        pygame.display.flip()
+        
 
-        # 엔딩 화면을 잠시 보여줌
-        t.sleep(10)  # 3초간 보여주기
-        pygame.quit()
+        waiting_for_input = True
+        while waiting_for_input:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_m:
+                        waiting_for_input = False  # 게임을 다시 시작하기 위한 플래그
+
+        pygame.quit()  # 이전 게임 종료
 
 class Player:
     def __init__(self, tile_num, player_image, screen):
