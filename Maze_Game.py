@@ -4,10 +4,10 @@ import time as t
 import numpy as np
 
 
-class OutsideBoundaryError(Exception):
-    """외벽에서 이동하려고 할 경우 발생하는 사용자 정의 예외"""
-    def __init__(self, message):
-        super().__init__(message)
+class MoveToWallError(Exception):
+    """벽으로 이동하려고 할 경우 발생하는 사용자 정의 예외"""
+    def __init__(self):
+        super().__init__()
         
 class WidthSizeError(Exception):
     """미로 가로 크기가 지정 범위 (20 ~ 70) 을 벗어날 때 발생하는 사용자 정의 예외"""
@@ -16,11 +16,6 @@ class WidthSizeError(Exception):
 
 class HeightSizeError(Exception):
     """미로 세로 크기가 지ㅓ범위 (10 ~ 60) 을 벗어날 때 발생하는 사용자 정의 예외"""
-    def __init__(self, message):
-        super().__init__(message)
-
-class InvalidValueError(Exception):
-    """입력받은 미로 크기가 정수형이 아닐 때 발생하는 사용자 정이 예외"""
     def __init__(self, message):
         super().__init__(message)
 
@@ -35,11 +30,6 @@ class Maze:
         self.coords = [(x, y) for y in range(0, self.height * 15, 15) for x in range(0, self.width * 15, 15)]
         self.exit_tile_nums = [self.mapsize - self.width - i for i in range(1, 4)]
 
-    def set_edge_tile_num(self):
-        self.left_vertical_edge_num = [i for i in range(0, self.mapsize - self.width, self.width)]
-        self.right_vertical_edge_num = [i for i in range(self.width - 2, self.mapsize - self.width - 1, self.width)]
-        self.up_horizon_edge_num = [i for i in range(0, self.width - 1)]
-        self.down_horizon_edge_num = [i for i in range(self.mapsize - 2 * self.width, self.mapsize - self.width - 1)]
 
     def generate_maze(self):
         maze = np.zeros((self.height, self.width), dtype=int)
@@ -106,33 +96,15 @@ class Player:
             raise ValueError("잘못된 키 입력")
         return self.tile_num + change
 
-    @staticmethod
-    def check_boundary(next_tile_num):
-        message = ""
-        if next_tile_num in maze.exit_tile_nums:
-            return
-
-        if next_tile_num in maze.up_horizon_edge_num:
-            message = "위쪽 외벽에서 위로 이동할 수 없습니다."
-        if next_tile_num in maze.down_horizon_edge_num:
-            message = "아래쪽 외벽에서 아래로 이동할 수 없습니다."
-        if next_tile_num in maze.left_vertical_edge_num:
-            message = "왼쪽 외벽에서 왼쪽으로 이동할 수 없습니다."
-        if next_tile_num in maze.right_vertical_edge_num:
-            message = "오른쪽 외벽에서 오른쪽으로 이동할 수 없습니다."
-        if message:
-            raise OutsideBoundaryError(message)
 
     def move_player(self, user_key):
         next_tile_num = self.cal_next_tile_num(user_key)
-        self.check_boundary(next_tile_num)
         if maze.now_map_data[next_tile_num] == 1:
             self.tile_num = next_tile_num
             pygame.mixer.Sound('sound.mp3').play()
             return True
         else:
-            print("벽이 있어 이동할 수 없습니다.")
-            pygame.mixer.Sound('sound_wall.mp3').play()
+            raise MoveToWallError
             return False
 
     def show_player(self):
@@ -204,51 +176,77 @@ class ScreenManager:
                         continue
 
     @classmethod
-    def input_maze_size(cls, screen, font):
-            message_type = ['horizontal', 'vertical']
+    def input_maze_size(cls, screen):
+            message_type = ['Width', 'Height']
             width_height = []
             for i in range(2):
-                size = ['_']*2
-                input_message = font.render(f"""Type {message_type[i]} tile amount of maze you'll play!""", True, (102, 255, 255))
-                warning_message = pygame.font.Font(None, 23).render("the size must be two-digit", True, (102, 255, 255))
-                screen.fill((102, 153, 204))
-                cls.blit_image_center(screen, input_message, 560)
-                cls.blit_image_center(screen, warning_message, 580)
-                pygame.display.flip()
-                
-                for j in range(2):
-                    user_input = cls.perceive_input_key()
-                    size[j] = user_input
-                    font_ = pygame.font.Font(None, 20)
-                    typed_value = font_.render(f"{''.join(size)}", True, (102, 255, 255))
-                    cls.blit_image_center(screen, typed_value, 620)
+                while True:
+                    size = ['_']*2
+                    screen.fill((102, 153, 204))
+                    input_message = pygame.font.Font(None, 36).render(f"""Type {message_type[i]} ( tile amount ) of maze you'll play!""", True, (102, 255, 255))
+                    warning_message = pygame.font.Font(None, 27).render("the size must be two-digit !", True, (90, 255, 255))
+                    input_blank = pygame.font.Font(None, 40).render(f"{' '.join(size)} Tiles", True, (102, 255, 255))
+                    announce_of_type = pygame.font.Font(None, 36).render(f'{message_type[i]}', True, (102, 255, 255))
+                    cls.blit_image_center(screen, input_message, 560)
+                    cls.blit_image_center(screen, warning_message, 600)
+                    cls.blit_image_center(screen, input_blank, 300)
+                    cls.blit_image_center(screen, announce_of_type, 270)
                     pygame.display.flip()
-                width_height.append(int(''.join(size)))
+                    
+                    for j in range(2):
+                        user_input = cls.perceive_input_key()
+                        size[j] = user_input
+                        input_blank = pygame.font.Font(None, 40).render(f"{' '.join(size)} Tiles", True, (102, 255, 255))
+                        cls.blit_image_center(screen, input_blank, 300)
+                        pygame.display.flip()
+                        if j == 1:
+                            t.sleep(0.5)
+                    try:
+                        check_value = int(''.join(size))
+                        if i == 0 and check_value not in range(20, 71):
+                            raise WidthSizeError('width must be in (20 ~ 70)')
+                        elif i == 1 and check_value not in range(10, 61):
+                            raise HeightSizeError('height must be in (10 ~ 60)')
+
+                    except WidthSizeError as e:
+                        error_message = e.args[0]
+                    except HeightSizeError as e:
+                        error_message = e.args[0]
+                    else:
+                        error_message = ''
+                        width_height.append( check_value )
+                        break
+                        
+                    finally:
+                        if error_message:
+                            error_message = pygame.font.Font(None, 40).render(error_message, True, (204, 0, 0))
+                            cls.blit_image_center(screen, error_message, 500)
+                            pygame.display.flip()
+                            t.sleep(1.6)
+                            
             return width_height
+
+
                     
     def show_set_mapsize_screen(self, screen):
         screen.fill((102, 153, 204))
-        font_ = pygame.font.Font(None, 36)
-        return map(int, self.input_maze_size(screen, font_))
+        return map(int, self.input_maze_size(screen))
 
         
 
-    @staticmethod
-    def show_ending_screen(screen, elapsed_time):
-        ending_font = pygame.font.Font(None, 72)
-        message_font = pygame.font.Font(None, 36)
+    @classmethod
+    def show_ending_screen(cls, screen, elapsed_time):
+        ending_font = pygame.font.Font(None, 50)
+        message_font = pygame.font.Font(None, 25)
 
         screen.fill((0, 0, 0))  # 배경을 검은색으로 설정
         ending_message = ending_font.render("GAME CLEAR!", True, (255, 255, 0))
         time_message = message_font.render(f"total time: {elapsed_time} sec", True, (255, 255, 255))
         restart_message = message_font.render("Press 'm' to play again", True, (255, 255, 255))
 
-        screen.blit(ending_message, (screen.get_width() // 2 - ending_message.get_width() // 2, 
-                                      screen.get_height() // 2 - ending_message.get_height() // 2 - 20))
-        screen.blit(time_message, (screen.get_width() // 2 - time_message.get_width() // 2, 
-                                    screen.get_height() // 2 + time_message.get_height() // 2))
-        screen.blit(restart_message, (screen.get_width() // 2 - restart_message.get_width() // 2, 
-                                       screen.get_height() // 2 + time_message.get_height() + 20))
+        cls.blit_image_center(screen, ending_message, screen.get_height() // 2 - ending_message.get_height() // 2 - 20)
+        cls.blit_image_center(screen, time_message, screen.get_height() // 2 + time_message.get_height() // 2)
+        cls.blit_image_center(screen, restart_message, screen.get_height() // 2 + time_message.get_height() + 20)
 
         pygame.mixer.Sound('sound_clear.mp3').play()
         pygame.display.flip()
@@ -291,7 +289,6 @@ def restart_game():
     x, y = screen_manager.show_set_mapsize_screen(screen)
 
     maze = Maze(x, y)    
-    maze.set_edge_tile_num()
     for i in range(3):
         combined_map = pygame.Surface((15 * maze.width, 15 * maze.height))
         maze.make_map_picture(i, combined_map)
@@ -345,8 +342,9 @@ def restart_game():
 
                 try:
                     player.move_player(key)
-                except OutsideBoundaryError as e:
-                    print(f"오류 발생: {e}")
+                except MoveToWallError:
+                    pygame.mixer.Sound('sound_wall.mp3').play()
+                    
 
             if event.type == pygame.USEREVENT:
                 map_num = (map_num + 1) % len(map_images)
@@ -359,5 +357,4 @@ def restart_game():
         clock.tick(60)
 
 # 메인 게임 루프
-while True:
-    restart_game()
+restart_game()
