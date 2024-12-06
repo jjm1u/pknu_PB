@@ -2,6 +2,7 @@ import pygame
 import random as rd
 import time as t
 import numpy as np
+import sys
 
 
 class MoveToWallError(Exception):
@@ -18,7 +19,8 @@ class HeightSizeError(Exception):
     """미로 세로 크기가 지ㅓ범위 (10 ~ 60) 을 벗어날 때 발생하는 사용자 정의 예외"""
     def __init__(self, message):
         super().__init__(message)
-
+    
+    
 
     
 class Maze:
@@ -119,6 +121,12 @@ class Player:
             self.first_move = second_move
             return False
 
+    def is_stuck_in_wall(self):
+        if  maze.now_map_data[ self.tile_num ] == 0:
+            self.tile_num = maze.width + 1
+
+        
+
 
 
 
@@ -129,19 +137,22 @@ class ScreenManager:
     def blit_image_center(screen, image, y):
         screen.blit(image, (screen.get_width() // 2 - image.get_width() // 2, int(y)))
 
-    @staticmethod
-    def show_starting_screen(screen):
+    @classmethod
+    def show_starting_screen(cls, screen):
         screen.fill((102, 153, 204))
-        font_ = pygame.font.Font(None, 36)
-        enter_to_start = font_.render('Press Enter To START !', True, (102, 255, 255))
-        screen.blit( enter_to_start,
-                     (screen.get_width() // 2 - enter_to_start.get_width() // 2, 600))
+        enter_to_start = pygame.font.Font(None, 36).render('Press Enter To START !', True, (102, 255, 255))
+        game_title = pygame.font.Font(None, 80).render('Run    To    Exit', True, (153, 204, 255))
+        cls.blit_image_center(screen, game_title, 180)
+        cls.blit_image_center(screen, enter_to_start, 600)
         pygame.display.flip()
         running = True
         
         while running:
             for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
                         print('Enter_key is pushed.')
                         running = False
@@ -151,7 +162,10 @@ class ScreenManager:
     def perceive_input_key():
         while True:
             for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_1 or event.key == pygame.K_KP_1:
                         return '1'
                     elif event.key == pygame.K_2 or event.key == pygame.K_KP_2:
@@ -183,7 +197,7 @@ class ScreenManager:
                 while True:
                     size = ['_']*2
                     screen.fill((102, 153, 204))
-                    input_message = pygame.font.Font(None, 36).render(f"""Type {message_type[i]} ( tile amount ) of maze you'll play!""", True, (102, 255, 255))
+                    input_message = pygame.font.Font(None, 36).render(f"""Type {message_type[i]} ( tile amount ) of maze you'll play   using num_key !""", True, (102, 255, 255))
                     warning_message = pygame.font.Font(None, 27).render("the size must be two-digit !", True, (90, 255, 255))
                     input_blank = pygame.font.Font(None, 40).render(f"{' '.join(size)} Tiles", True, (102, 255, 255))
                     announce_of_type = pygame.font.Font(None, 36).render(f'{message_type[i]}', True, (102, 255, 255))
@@ -205,8 +219,8 @@ class ScreenManager:
                         check_value = int(''.join(size))
                         if i == 0 and check_value not in range(20, 71):
                             raise WidthSizeError('width must be in (20 ~ 70)')
-                        elif i == 1 and check_value not in range(10, 61):
-                            raise HeightSizeError('height must be in (10 ~ 60)')
+                        elif i == 1 and check_value not in range(10, 51):
+                            raise HeightSizeError('height must be in (10 ~ 50)')
 
                     except WidthSizeError as e:
                         error_message = e.args[0]
@@ -226,13 +240,11 @@ class ScreenManager:
                             
             return width_height
 
-
                     
     def show_set_mapsize_screen(self, screen):
         screen.fill((102, 153, 204))
         return map(int, self.input_maze_size(screen))
-
-        
+    
 
     @classmethod
     def show_ending_screen(cls, screen, elapsed_time):
@@ -256,7 +268,7 @@ class ScreenManager:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
-                    exit()
+                    sys.exit()
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_m:
                         waiting_for_input = False  # 게임을 다시 시작하기 위한 플래그
@@ -283,7 +295,7 @@ def restart_game():
     player_image = pygame.transform.scale(player_image, (15, 15))
 
     # 게임 설정
-    screen = pygame.display.set_mode((900, 700))
+    screen = pygame.display.set_mode((900, 700), pygame.RESIZABLE)  # 푸른 창이 마우스로 끌 수 있도록
     screen_manager = ScreenManager()
     screen_manager.show_starting_screen(screen)
     x, y = screen_manager.show_set_mapsize_screen(screen)
@@ -325,18 +337,23 @@ def restart_game():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                pygame.quit()  # 모든 창을 종료
+                sys.exit()  # 프로그램을 정상 종료
+
             elif event.type == pygame.KEYDOWN:
                 if player.is_moving_too_fast():
                     continue
-                if event.key == pygame.K_UP:
+                if event.key == pygame.K_w:
                     key = "UP"
-                elif event.key == pygame.K_DOWN:
+                elif event.key == pygame.K_s:
                     key = "DOWN"
-                elif event.key == pygame.K_LEFT:
+                elif event.key == pygame.K_a:
                     key = "LEFT"
-                elif event.key == pygame.K_RIGHT:
+                elif event.key == pygame.K_d:
                     key = "RIGHT"
+                elif event.key == pygame.K_ESCAPE:
+                    pygame.quit()  # 모든 창을 종료
+                    sys.exit()  # 프로그램을 정상 종료
                 else:
                     continue
 
@@ -344,11 +361,11 @@ def restart_game():
                     player.move_player(key)
                 except MoveToWallError:
                     pygame.mixer.Sound('sound_wall.mp3').play()
-                    
 
             if event.type == pygame.USEREVENT:
                 map_num = (map_num + 1) % len(map_images)
                 maze.update_now_map_data(map_num)
+                player.is_stuck_in_wall()
 
         if player.tile_num == maze.exit_tile_nums[0]:
             ScreenManager.show_ending_screen(screen, elapsed_time)
