@@ -29,7 +29,7 @@ class Maze:
         self.height = height
         self.mapsize = height * width
         self.map_data = [self.generate_maze() for _ in range(3)]
-        self.coords = [(x, y) for y in range(0, self.height * 15, 15) for x in range(0, self.width * 15, 15)]
+        self.coords = [(x, y + 45) for y in range(0, self.height * 15, 15) for x in range(0, self.width * 15, 15)]
         self.exit_tile_nums = [self.mapsize - self.width - i for i in range(1, 4)]
 
 
@@ -68,7 +68,8 @@ class Maze:
             else:
                 image = road_image
 
-            combined_surf.blit(image, self.coords[i])
+            x, y = self.coords[i]
+            combined_surf.blit(image, (x, y))
         pygame.image.save(combined_surf, f'MAZE_MAP{map_num + 1}.png')
 
     def update_now_map_data(self, map_num):
@@ -301,14 +302,14 @@ def restart_game():
     player_image = pygame.transform.scale(player_image, (15, 15))
 
     # 게임 설정
-    screen = pygame.display.set_mode((900, 700), pygame.RESIZABLE)  # 푸른 창이 마우스로 끌 수 있도록
+    screen = pygame.display.set_mode((900, 700))
     screen_manager = ScreenManager()
     screen_manager.show_starting_screen(screen)
     x, y = screen_manager.show_set_mapsize_screen(screen)
 
     maze = Maze(x, y)    
     for i in range(3):
-        combined_map = pygame.Surface((15 * maze.width, 15 * maze.height))
+        combined_map = pygame.Surface((15 * maze.width, 15 * maze.height + 45))
         maze.make_map_picture(i, combined_map)
 
     maze_map1 = pygame.image.load('MAZE_MAP1.png')
@@ -316,7 +317,7 @@ def restart_game():
     maze_map3 = pygame.image.load('MAZE_MAP3.png')
     map_images = [maze_map1, maze_map2, maze_map3]
 
-    screen = pygame.display.set_mode((15 * maze.width, 15 * maze.height))
+    screen = pygame.display.set_mode((15 * maze.width, 15 * maze.height + 45))
     pygame.display.set_caption("Maze_Game")
 
     pygame.time.set_timer(pygame.USEREVENT, 5000)
@@ -343,8 +344,8 @@ def restart_game():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                pygame.quit()  # 모든 창을 종료
+                sys.exit()  # 프로그램을 정상 종료
 
             elif event.type == pygame.KEYDOWN:
                 if player.is_moving_too_fast():
