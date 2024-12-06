@@ -103,7 +103,7 @@ class Player:
         next_tile_num = self.cal_next_tile_num(user_key)
         if maze.now_map_data[next_tile_num] == 1:
             self.tile_num = next_tile_num
-            pygame.mixer.Sound('sound.mp3').play()
+            pygame.mixer.Sound('player_moving_sound.mp3').play()
             return True
         else:
             raise MoveToWallError
@@ -154,7 +154,7 @@ class ScreenManager:
                     sys.exit()
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
-                        print('Enter_key is pushed.')
+                        pygame.mixer.Sound('click_ENTER.ogg')
                         running = False
                         break
                         
@@ -255,12 +255,15 @@ class ScreenManager:
         ending_message = ending_font.render("GAME CLEAR!", True, (255, 255, 0))
         time_message = message_font.render(f"total time: {elapsed_time} sec", True, (255, 255, 255))
         restart_message = message_font.render("Press 'm' to play again", True, (255, 255, 255))
+        close_message = pygame.font.Font(None, 25).render("Press 'esc' to end game", True, (255, 255, 255))
 
         cls.blit_image_center(screen, ending_message, screen.get_height() // 2 - ending_message.get_height() // 2 - 20)
         cls.blit_image_center(screen, time_message, screen.get_height() // 2 + time_message.get_height() // 2)
         cls.blit_image_center(screen, restart_message, screen.get_height() // 2 + time_message.get_height() + 20)
+        cls.blit_image_center(screen, close_message, screen.get_height() // 2 + close_message.get_height() + 33)
 
-        pygame.mixer.Sound('sound_clear.mp3').play()
+        pygame.mixer.music.stop()
+        pygame.mixer.Sound('clear_sound.mp3').play()
         pygame.display.flip()
 
         waiting_for_input = True
@@ -272,6 +275,9 @@ class ScreenManager:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_m:
                         waiting_for_input = False  # 게임을 다시 시작하기 위한 플래그
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
           # 이전 게임 종료
 
 
@@ -283,13 +289,13 @@ def restart_game():
     # 배경음악과 효과음 설정
     pygame.mixer.music.load('bgm.mp3')
     pygame.mixer.music.play(-1)  # 반복 재생
-    pygame.mixer.music.set_volume(0.5)
+    pygame.mixer.music.set_volume(0.3)
 
     # 이미지 로드 및 크기 조정
     global wall_image, road_image, player_image, maze
-    wall_image = pygame.image.load('stone_wall02.png')
+    wall_image = pygame.image.load('wall_tile.png')
     wall_image = pygame.transform.scale(wall_image, (15, 15))
-    road_image = pygame.image.load('01tizeta_floor_e.png')
+    road_image = pygame.image.load('road_tile.png')
     road_image = pygame.transform.scale(road_image, (15, 15))
     player_image = pygame.image.load('Player.png')
     player_image = pygame.transform.scale(player_image, (15, 15))
@@ -337,8 +343,8 @@ def restart_game():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()  # 모든 창을 종료
-                sys.exit()  # 프로그램을 정상 종료
+                pygame.quit()
+                sys.exit()
 
             elif event.type == pygame.KEYDOWN:
                 if player.is_moving_too_fast():
@@ -360,7 +366,7 @@ def restart_game():
                 try:
                     player.move_player(key)
                 except MoveToWallError:
-                    pygame.mixer.Sound('sound_wall.mp3').play()
+                    pygame.mixer.Sound('hit_wall_sound.wav').play()
 
             if event.type == pygame.USEREVENT:
                 map_num = (map_num + 1) % len(map_images)
