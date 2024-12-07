@@ -21,9 +21,9 @@ MazeGame/
 ├── Player.py             # 플레이어 캐릭터 관련 모듈
 ├── Maze.py               # 미로 생성 및 탐험 로직
 ├── Exceptions.py         # 커스텀 예외 처리
-├── Date_Sets/               # 이미지, 사운드 등 리소스 파일
-├── __init__.py               
-└── README.md             # 프로젝트 설명 문서
+├── Date_Sets/            # 이미지, 사운드 등 리소스 파일
+├── README.md             # 프로젝트 설명 문서
+└── __init__.py               
 ```
 ---
 
