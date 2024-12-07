@@ -2,6 +2,7 @@ import pygame
 import random as rd
 import time as t
 import numpy as np
+from functools import reduce
 import sys
 
 
@@ -16,7 +17,7 @@ class WidthSizeError(Exception):
         super().__init__(message)
 
 class HeightSizeError(Exception):
-    """미로 세로 크기가 지ㅓ범위 (10 ~ 60) 을 벗어날 때 발생하는 사용자 정의 예외"""
+    """미로 세로 크기가 지정범위 (10 ~ 60) 을 벗어날 때 발생하는 사용자 정의 예외"""
     def __init__(self, message):
         super().__init__(message)
     
@@ -25,12 +26,14 @@ class HeightSizeError(Exception):
     
 class Maze:
     def __init__(self, width, height):
-        self.width = width
-        self.height = height
-        self.mapsize = height * width
-        self.map_data = [self.generate_maze() for _ in range(3)]
-        self.coords = [(x, y + 45) for y in range(0, self.height * 15, 15) for x in range(0, self.width * 15, 15)]
-        self.exit_tile_nums = [self.mapsize - self.width - i for i in range(1, 4)]
+        self.width                     = width
+        self.height                    = height
+        self.mapsize                  = height * width
+        self.map_data                = [self.generate_maze() for _ in range(3)]
+        self.coords                    = [(x, y + 45) for y in range(0, self.height * 15, 15) for x in range(0, self.width * 15, 15)]
+        self.exit_tile_nums           = [self.mapsize - self.width - i for i in range(1, 4)]
+        self.check_point_tile_num = rd.choice([ind for ind, value in enumerate(sum(self.map_data)) if value == 3])
+        print(self.check_point_tile_num)
 
 
     def generate_maze(self):
@@ -58,15 +61,19 @@ class Maze:
         maze[self.height - 2][self.width - 1] = 1
         maze[self.height - 2][self.width - 3] = 1
 
-        return list(maze.flatten())
+        return maze.flatten()
+
 
     def make_map_picture(self, map_num, combined_surf):
         now_map = self.map_data[map_num]
         for i in range(self.mapsize):
-            if now_map[i] == 0:
-                image = wall_image
-            else:
+            if now_map[i] == 1:
                 image = road_image
+
+            if i == self.check_point_tile_num:
+                image = checkpoint_image
+            elif now_map[i] == 0:
+                image = wall_image
 
             x, y = self.coords[i]
             combined_surf.blit(image, (x, y))
@@ -81,10 +88,11 @@ class Maze:
 
 class Player:
     def __init__(self, tile_num, player_image, screen):
-        self.tile_num = tile_num
-        self.image = player_image
-        self.screen = screen
-        self.first_move = t.time()
+        self.tile_num    = tile_num
+        self.image       = player_image
+        self.screen       = screen
+        self.first_move   = t.time()
+        self.passed_checkpoint = False
 
     def cal_next_tile_num(self, user_key):
         if user_key == 'UP':
@@ -102,13 +110,19 @@ class Player:
 
     def move_player(self, user_key):
         next_tile_num = self.cal_next_tile_num(user_key)
+        
         if maze.now_map_data[next_tile_num] == 1:
+            
+            if next_tile_num == maze.check_point_tile_num:
+                self.passed_checkpoint = True
+                
             self.tile_num = next_tile_num
             pygame.mixer.Sound('player_moving_sound.mp3').play()
             return True
         else:
             raise MoveToWallError
             return False
+
 
     def show_player(self):
         x, y = maze.coords[self.tile_num]
@@ -127,9 +141,6 @@ class Player:
             self.tile_num = maze.width + 1
 
         
-
-
-
 
 
 class ScreenManager:
@@ -155,7 +166,6 @@ class ScreenManager:
                     sys.exit()
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
-                        pygame.mixer.Sound('click_ENTER.ogg')
                         running = False
                         break
                         
@@ -288,18 +298,20 @@ def restart_game():
     pygame.mixer.init()
 
     # 배경음악과 효과음 설정
-    pygame.mixer.music.load('bgm.mp3')
+    pygame.mixer.music.load('bgm.wav')
     pygame.mixer.music.play(-1)  # 반복 재생
     pygame.mixer.music.set_volume(0.3)
 
     # 이미지 로드 및 크기 조정
-    global wall_image, road_image, player_image, maze
-    wall_image = pygame.image.load('wall_tile.png')
-    wall_image = pygame.transform.scale(wall_image, (15, 15))
-    road_image = pygame.image.load('road_tile.png')
-    road_image = pygame.transform.scale(road_image, (15, 15))
-    player_image = pygame.image.load('Player.png')
-    player_image = pygame.transform.scale(player_image, (15, 15))
+    global wall_image, road_image, player_image, checkpoint_image, maze
+    wall_image          = pygame.image.load('wall_tile.png')
+    wall_image          = pygame.transform.scale(wall_image, (15, 15))
+    road_image         = pygame.image.load('road_tile.png')
+    road_image         = pygame.transform.scale(road_image, (15, 15))
+    player_image       = pygame.image.load('Player.png')
+    player_image       = pygame.transform.scale(player_image, (15, 15))
+    checkpoint_image = pygame.image.load('checkpoint.png')
+    checkpoint_image = pygame.transform.scale(checkpoint_image, (15, 15))
 
     # 게임 설정
     screen = pygame.display.set_mode((900, 700))
@@ -375,8 +387,15 @@ def restart_game():
                 player.is_stuck_in_wall()
 
         if player.tile_num == maze.exit_tile_nums[0]:
-            ScreenManager.show_ending_screen(screen, elapsed_time)
-            restart_game()
+            
+            if not player.passed_checkpoint:
+                unchecked_point_message = pygame.font.Font(None, 28).render('Check Point Disabled !', True, (255, 0, 0))
+                screen.blit(unchecked_point_message, (30, 10))
+                pygame.display.flip()
+                continue
+            else:
+                ScreenManager.show_ending_screen(screen, elapsed_time)
+                restart_game()
 
         clock.tick(60)
 
