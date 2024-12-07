@@ -20,7 +20,10 @@ class HeightSizeError(Exception):
     """미로 세로 크기가 지정범위 (10 ~ 60) 을 벗어날 때 발생하는 사용자 정의 예외"""
     def __init__(self, message):
         super().__init__(message)
-    
+
+class CheckpointNotPassedError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
     
 
     
@@ -31,9 +34,8 @@ class Maze:
         self.mapsize                  = height * width
         self.map_data                = [self.generate_maze() for _ in range(3)]
         self.coords                    = [(x, y + 45) for y in range(0, self.height * 15, 15) for x in range(0, self.width * 15, 15)]
-        self.exit_tile_nums           = [self.mapsize - self.width - i for i in range(1, 4)]
+        self.exit_tile_num            = self.mapsize - self.width - 1
         self.check_point_tile_num = rd.choice([ind for ind, value in enumerate(sum(self.map_data)) if value == 3])
-        print(self.check_point_tile_num)
 
 
     def generate_maze(self):
@@ -82,7 +84,16 @@ class Maze:
     def update_now_map_data(self, map_num):
         self.now_map_data = self.map_data[map_num]
 
-
+    def controll_exit_tile(self, screen, is_player_passed_checkpoint):
+        if is_player_passed_checkpoint:
+            screen.blit(road_image, self.coords[ self.exit_tile_num ])
+            if self.now_map_data[ self.exit_tile_num ] == 0:
+                self.now_map_data[ self.exit_tile_num ] = 1
+                
+        else:
+            self.now_map_data [ self.exit_tile_num ] = 0
+            screen.blit(wall_image, self.coords[ self.exit_tile_num ])
+            
 
 
 
@@ -110,11 +121,14 @@ class Player:
 
     def move_player(self, user_key):
         next_tile_num = self.cal_next_tile_num(user_key)
+        if next_tile_num == maze.exit_tile_num and maze.now_map_data[next_tile_num] == 0:
+            raise CheckpointNotPassedError('CheckPoint Disabled !')
         
         if maze.now_map_data[next_tile_num] == 1:
             
             if next_tile_num == maze.check_point_tile_num:
                 self.passed_checkpoint = True
+                pygame.mixer.Sound('activated_checkpoint.wav').play()
                 
             self.tile_num = next_tile_num
             pygame.mixer.Sound('player_moving_sound.mp3').play()
@@ -340,13 +354,13 @@ def restart_game():
 
     start_time = t.time()
     font = pygame.font.Font(None, 36)
-
     running = True
 
     # 게임 루프
     while running:
         elapsed_time = int(t.time() - start_time)
         screen.blit(map_images[map_num], (0, 0))
+        maze.controll_exit_tile(screen, player.passed_checkpoint )
         player.show_player()
 
         time_surface = font.render(f"Time: {elapsed_time} sec", True, (255, 0, 0))
@@ -380,20 +394,19 @@ def restart_game():
                     player.move_player(key)
                 except MoveToWallError:
                     pygame.mixer.Sound('hit_wall_sound.wav').play()
+                except CheckpointNotPassedError as e:
+                    unchecked_message = pygame.font.Font(None, 18).render(e.args[0], True, (255, 0, 0))
+                    screen.blit(unchecked_message, (time_surface.get_width() + 20, 20))
+                    pygame.mixer.Sound('hit_wall_sound.wav').play()
+                    pygame.display.flip()
+                    t.sleep(0.1)
 
             if event.type == pygame.USEREVENT:
                 map_num = (map_num + 1) % len(map_images)
                 maze.update_now_map_data(map_num)
                 player.is_stuck_in_wall()
 
-        if player.tile_num == maze.exit_tile_nums[0]:
-            
-            if not player.passed_checkpoint:
-                unchecked_point_message = pygame.font.Font(None, 28).render('Check Point Disabled !', True, (255, 0, 0))
-                screen.blit(unchecked_point_message, (30, 10))
-                pygame.display.flip()
-                continue
-            else:
+        if player.tile_num == maze.exit_tile_num:
                 ScreenManager.show_ending_screen(screen, elapsed_time)
                 restart_game()
 
