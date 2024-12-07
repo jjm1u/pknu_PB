@@ -36,4 +36,4 @@ MazeGame/
 
 ## 📦 요구사
 -**Python 3.9 이상**
--**Pygame 라이브러리 필**
+-**Pygame 라이브러리 필요**
