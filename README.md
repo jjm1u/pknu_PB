@@ -35,7 +35,7 @@ MazeGame/
 ---
 
 ## 🧑‍🚀 Team
-|<img src="https://i.namu.wiki/i/Bge3xnYd4kRe_IKbm2uqxlhQJij2SngwNssjpjaOyOqoRhQlNwLrR2ZiK-JWJ2b99RGcSxDaZ2UCI7fiv4IDDQ.webp" width="150" height="150"/>|<img src="https://i.namu.wiki/i/Bge3xnYd4kRe_IKbm2uqxlhQJij2SngwNssjpjaOyOqoRhQlNwLrR2ZiK-JWJ2b99RGcSxDaZ2UCI7fiv4IDDQ.webp" width="150" height="150"/>|
+|<img src="https://avatars.githubusercontent.com/u/163748942?s=400&v=4" width="150" height="150"/>|<img src="https://avatars.githubusercontent.com/u/162407058?v=4" width="150" height="150"/>|
 |:-:|:-:
 |이정민<br/>[@jjm1u](https://github.com/jjm1u)|최한수<br/>[@TONn618](https://github.com/TONn618)
 
