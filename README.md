@@ -34,6 +34,11 @@ MazeGame/
 
 ---
 
+## Team
+|<img src="https://avatars.githubusercontent.com/u/163727539?v=4" width="150" height="150"/>|<img src="https://avatars.githubusercontent.com/u/152063735?v=4" width="150" height="150"/>|
+|:-:|:-:
+|장인영<br/>[@InYoung05](https://github.com/InYoung05)|sujeong910<br/>[@sujeong910](https://github.com/sujeong910)
+
 ## 📦 요구사
 -**Python 3.9 이상**
 -**Pygame 라이브러리 필요**
