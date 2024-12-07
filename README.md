@@ -34,11 +34,14 @@ MazeGame/
 
 ---
 
-## Team
+## Team 🧑‍🚀
 |<img src="https://i.namu.wiki/i/Bge3xnYd4kRe_IKbm2uqxlhQJij2SngwNssjpjaOyOqoRhQlNwLrR2ZiK-JWJ2b99RGcSxDaZ2UCI7fiv4IDDQ.webp" width="150" height="150"/>|<img src="https://i.namu.wiki/i/Bge3xnYd4kRe_IKbm2uqxlhQJij2SngwNssjpjaOyOqoRhQlNwLrR2ZiK-JWJ2b99RGcSxDaZ2UCI7fiv4IDDQ.webp" width="150" height="150"/>|
 |:-:|:-:
 |이정민<br/>[@jjm1u](https://github.com/jjm1u)|최한수<br/>[@TONn618](https://github.com/TONn618)
 
+---
+
 ## 📦 요구사항  
 -**Python 3.9 이상**
 -**Pygame 라이브러리 필요**
+
