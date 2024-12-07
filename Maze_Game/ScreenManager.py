@@ -4,18 +4,56 @@ import sys
 from Exceptions import *
 
 class ScreenManager:
+    @staticmethod
+    def show_gamerule_intro_screen(screen, image_list):
+        font_ = pygame.font.Font(None, 28)
+        enter_message = font_.render('Press Enter to go to next.', True, (152, 255, 240))
+        image_list = list(map(lambda image: pygame.transform.scale(image, (100, 100)), image_list))
+        messages = ['''The Road Tile. You can move on Road Tile by four keys.\W-UP, A-LEFT, S-DOWN, D-RIGHT.\And MINIMUM INTERVAL of each move is 0.14s.\You can't move faster than that''',
+                    '''The Wall Tile. You can't move torwards that.\And if you stuck in wall when map has just changed,\you will TP to start_point''',
+                    '''This is you.\Keep your eyes on it !''',
+                    '''The checkpoint.\You must pass this tile At Least Once''']
+        screen.fill((102, 153, 204))
+        for i in range(4):
+            screen.fill((102, 153, 204))
+            message_lines = messages[i].split("\\")
+            y_offset = 250
+            
+            for line in message_lines:
+                message = font_.render(line, True, (120, 240, 240))
+                screen.blit(message, (30, y_offset))
+                y_offset += 40
+
+            screen.blit(image_list[i], (700, 350))
+            screen.blit(enter_message, (30, 400))
+            pygame.display.flip()
+            
+            running = True
+            while running:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_RETURN:
+                            running = False
+                            break
+            
 
     @staticmethod
     def blit_image_center(screen, image, y):
         screen.blit(image, (screen.get_width() // 2 - image.get_width() // 2, int(y)))
 
     @classmethod
-    def show_starting_screen(cls, screen):
+    def show_starting_screen(cls, screen, image_list):
         screen.fill((102, 153, 204))
         enter_to_start = pygame.font.Font(None, 36).render('Press Enter To START !', True, (102, 255, 255))
-        game_title = pygame.font.Font(None, 80).render('Run    To    Exit', True, (153, 204, 255))
+        E_to_explanation = pygame.font.Font(None, 36).render('Press A for some explanation !', True, (152, 255, 240))
+        game_title = pygame.font.Font(None, 100).render('Maze Escape', True, (100, 240, 255))
         cls.blit_image_center(screen, game_title, 180)
         cls.blit_image_center(screen, enter_to_start, 600)
+        cls.blit_image_center(screen, E_to_explanation, 550)
         pygame.display.flip()
         running = True
         
@@ -24,7 +62,11 @@ class ScreenManager:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+                    
                 elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_a:
+                        cls.show_gamerule_intro_screen(screen, image_list)
+                        
                     if event.key == pygame.K_RETURN:
                         running = False
                         break
@@ -122,7 +164,7 @@ class ScreenManager:
         ending_font = pygame.font.Font(None, 50)
         message_font = pygame.font.Font(None, 25)
 
-        screen.fill((0, 0, 0))  # 배경을 검은색으로 설정
+        screen.fill((0, 0, 0))
         ending_message = ending_font.render("GAME CLEAR!", True, (255, 255, 0))
         time_message = message_font.render(f"total time: {elapsed_time} sec", True, (255, 255, 255))
         restart_message = message_font.render("Press 'm' to play again", True, (255, 255, 255))
@@ -145,8 +187,7 @@ class ScreenManager:
                     sys.exit()
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_m:
-                        waiting_for_input = False  # 게임을 다시 시작하기 위한 플래그
+                        waiting_for_input = False
                     if event.key == pygame.K_ESCAPE:
                         pygame.quit()
                         sys.exit()
-          # 이전 게임 종료
